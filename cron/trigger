@@ -1,0 +1,1 @@
+*/10 * * * * python /home/ubuntu/xl/auto-build/main.py
