@@ -9,7 +9,7 @@ class jobs:
         info_list = sqlite.GetBuildInfo()
         if info_list == None or len(info_list) <= 0:
             return
-        server = jenkins.Jenkins('http://127.0.0.1:8081', username='leixu', password='Xl225316644')
+        server = jenkins.Jenkins('http://127.0.0.1:8081', username='pposscm', password='Qwer1234')
 	print server
         print server.jobs_count()
         for info in info_list:
