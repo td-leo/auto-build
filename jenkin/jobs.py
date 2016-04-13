@@ -35,7 +35,7 @@ class jobs:
             sqlite.UpdateBuildField(version_id)
 
     def GetFreeServer(self, identifier, server):
-	print 'GetFreeServer identifier:%s' %identifier
+	logging.debug('GetFreeServer identifier:%s' %identifier)
         job_list = server.get_all_jobs()
         idle_list = []
         busy_list = []
@@ -43,7 +43,7 @@ class jobs:
 	    job_name = job['name']
             if not job_name.lower().__contains__(identifier):
                 continue
-            logging.DEBUG('job name:%s' %job_name)
+            logging.debug('job name:%s' %job_name)
             txt = server.get_job_config(job_name)
             node = txt[txt.index('<assignedNode>') + len('<assignedNode>'):txt.index('</assignedNode>')]
             print 'node:%s' %node

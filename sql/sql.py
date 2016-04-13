@@ -118,8 +118,8 @@ class sql:
                 one.append(i[1])
                 complete_pro_id.append(one)
 
-        return complete_pro_id
         logging.debug('[GetAllCompleteProjects]:%s' %complete_pro_id)
+        return complete_pro_id
 
 
     def getNewId(self):
