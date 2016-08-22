@@ -1,10 +1,15 @@
 __author__ = 'xulei'
 
+#encoding:utf8
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 import MySQLdb
 import utils.contast
 import logging
+import os
+import time
 
-# coding=utf-8 
 
 class sql:
 
@@ -17,7 +22,7 @@ class sql:
     def _connect(self):
 
         global  db
-        db = MySQLdb.connect("localhost", "root", "scm", "redmine_default")
+        db = MySQLdb.connect("localhost", "root", "scm", "redmine_default",charset='utf8')
 
     def _query(self, sql):
 
@@ -85,19 +90,45 @@ class sql:
         return projects
 
 
-    def GetCompleteProject(self, project_id, version):
+    def CreateReleaseNoteDir(self):
+        logging.debug('[CreateReleaseNoteDir]: %s' %os.getcwd())
+        time_dir = time.time()
+        release_path = os.path.join('/home/ubuntu', str(time_dir))
+        if os.path.exists(release_path):
+            logging.debug('[CreateReleaseNoteDir] already exists')
+        else:
+            os.system("mkdir -p %s" %release_path)
+
+        note_file = os.path.join(release_path,'ReleaseNote.txt')
+        logging.debug('[CreateReleaseNoteDir] note_file:%s' %note_file)
+        return note_file
+
+    def GetCompleteProject(self, project_id, version_id):
 
         unresolve_id = self.getNewId()
         global db
         cursor = db.cursor()
-        cursor.execute('select status_id from issues where project_id=%s and fixed_version_id =%s' %(project_id, version))
+        cursor.execute('select status_id,description from issues where project_id=%s and fixed_version_id =%s' %(project_id, version_id))
 
         datas = cursor.fetchall()
         ''' adjust whether complete projects all issues must be @resolve or @close '''
 
+        '''[already build version do not continue]'''
+        version_data = self.GetCustomValueByVersionID(version_id)
+        for value in version_data:
+            if value[0] == self.GetBuildIdFromCustomFields() and value[1] == '1':
+                return None
+
         for data in datas:
             if int(data[0]) == unresolve_id:
                 return None
+
+        note = open(self.CreateReleaseNoteDir(), 'a+')
+        for data in datas:
+            logging.debug('releasenote %s' %data[1])
+            note.write(data[1])
+
+        note.close()
 
         return project_id
 
@@ -149,12 +180,13 @@ class sql:
 
             param = {}
             for value in version_data:
-                if value[0] == self.GetReleaseIdFromCustomFields():
-                    param['release'] = value[1]
-                elif value[0] == self.GetTypeIdFromCustomFields():
+                if value[0] == self.GetTypeIdFromCustomFields():
                     param['type'] = value[1]
                 elif value[0] == self.GetBuildIdFromCustomFields():
                     param['build'] = value[1]
+                elif value[0] == self.GetRomIdFromCustomFields():
+                    param['romid'] = value[1]
+
             for i in project_data:
                 if i[0] == self.GetChannelIdFromCustomFields():
                     param['channel'] = value[1]
@@ -243,6 +275,14 @@ class sql:
         global db
         cursor = db.cursor()
         cursor.execute("select id from custom_fields where name='release' and type='VersionCustomField'")
+        datas = cursor.fetchall()
+        cursor.close()
+        return datas[0][0]
+
+    def GetRomIdFromCustomFields(self):
+        global db
+        cursor = db.cursor()
+        cursor.execute("select id from custom_fields where name='romid' and type='VersionCustomField'")
         datas = cursor.fetchall()
         cursor.close()
         return datas[0][0]

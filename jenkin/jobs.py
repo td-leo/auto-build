@@ -13,28 +13,31 @@ class jobs:
 	print server
         print server.jobs_count()
         for info in info_list:
-            param = {'release:':None, 'type': None, 'channel':None}
-            param['release'] = info['release']
+            param = {'name':None, 'type': None, 'channel':None, 'romid':None}
             param['type'] = info['type']
             param['channel'] = info['channel']
             identifier = info['identifier']
             param['name'] = info['name']
+            param['romid'] = info['romid']
             logging.debug('Build State:' + info['build'])
 
             if info['build'] == '1':return
 
             logging.debug('Trigger Build! identifier:%s, %s' %(identifier, param))
 
-            #server.build_job(job, param)
-	    item = self.GetFreeServer(identifier, server)
-            server.build_job(item, param)
+            item = self.GetFreeServer(identifier, server)
+            if item == None:
+                logging.debug("Please Check Your Server,Maybe You Don't Config!!");
+                return
 
+            server.build_job(item, param)
             '''update version build states, don't build next time'''
 
             version_id = info['versionid']
             sqlite.UpdateBuildField(version_id)
 
     def GetFreeServer(self, identifier, server):
+        item = None
 	logging.debug('GetFreeServer identifier:%s' %identifier)
         job_list = server.get_all_jobs()
         idle_list = []
@@ -52,11 +55,10 @@ class jobs:
                 idle_list.append(job_name)
             else:
                 busy_list.append(job_name)
-                
 
 	if len(idle_list) > 0:
             item = random.choice(idle_list)
-        else:
+        elif len(busy_list) > 0:
             item = random.choice(busy_list)
         logging.debug('idle server list:%s' %idle_list)
         logging.debug('ramdom free server %s' %item)
@@ -64,7 +66,7 @@ class jobs:
 	return item
 
     def Test(self):
-        server = jenkins.Jenkins('http://127.0.0.1:8081', username='leixu', password='Xl225316644')
+        server = jenkins.Jenkins('http://127.0.0.1:8081', username='leixu', password='1234Qwer')
         print server.get_nodes()
 	info = server.get_node_info('33-150')
 	print info['idle']
