@@ -90,10 +90,11 @@ class sql:
         return projects
 
 
-    def CreateReleaseNoteDir(self):
-        logging.debug('[CreateReleaseNoteDir]: %s' %os.getcwd())
-        time_dir = time.time()
-        release_path = os.path.join('/home/ubuntu', str(time_dir))
+    def CreateReleaseNoteDir(self, romid):
+
+        identifier = self.GetInfoByProjectID(project_id)[1]
+        release_path = os.path.join('/home/ubuntu', identifier)
+        release_path = os.path.join(release_path, romid)
         if os.path.exists(release_path):
             logging.debug('[CreateReleaseNoteDir] already exists')
         else:
@@ -118,19 +119,22 @@ class sql:
         for value in version_data:
             if value[0] == self.GetBuildIdFromCustomFields() and value[1] == '1':
                 return None
+            elif value[0] == self.GetRomIdFromCustomFields():
+                romid = value[1]
 
         for data in datas:
             if int(data[0]) == unresolve_id:
                 return None
 
-        note = open(self.CreateReleaseNoteDir(), 'a+')
+        releasenote_path = self.CreateReleaseNoteDir(romid)
+        note = open(releasenote_path, 'a+')
         for data in datas:
             logging.debug('releasenote %s' %data[1])
             note.write(data[1])
 
         note.close()
 
-        return project_id
+        return (project_id, release_path)
 
     def GetAllCompleteProjects(self):
 
@@ -142,11 +146,12 @@ class sql:
             if len(pro_ver) > 0:all_pro_ver.append(pro_ver)
 
         for i in all_pro_ver:
-            id = self.GetCompleteProject(i[0], i[1])
-            if id != None:
+            id[0] = self.GetCompleteProject(i[0], i[1])
+            if id[0] != None:
                 one = []
-                one.append(id)
+                one.append(id[0])
                 one.append(i[1])
+                one.append(id[1])
                 complete_pro_id.append(one)
 
         logging.debug('[GetAllCompleteProjects]:%s' %complete_pro_id)
@@ -173,7 +178,7 @@ class sql:
         if project_list == None:
 	    logging.INFO('[GetBuildInfo] no project ready to build now !!')
 	    return
-        for project_id, version_id in project_list:
+        for project_id, version_id, release_path in project_list:
 
             version_data = self.GetCustomValueByVersionID(version_id)
             project_data = self.GetCustomValueByProjectID(project_id)
@@ -196,6 +201,8 @@ class sql:
             param['versionid'] = version_id
             param['projectid'] = project_id
             param['name'] = self.GetInfoByVersionID(version_id)
+
+            param['releasenote'] = release_path
             info_list.append(param)
 
 	logging.debug('[GetBuildInfo] project ready to build now:%s' %info_list)

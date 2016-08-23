@@ -13,19 +13,21 @@ class jobs:
 	print server
         print server.jobs_count()
         for info in info_list:
-            param = {'name':None, 'type': None, 'channel':None, 'romid':None}
+            param = {'name':None, 'type': None, 'channel':None, 'romid':None, 'releasenote':None}
             param['type'] = info['type']
             param['channel'] = info['channel']
             identifier = info['identifier']
             param['name'] = info['name']
             param['romid'] = info['romid']
+            param['releasenote'] = info['releasenote']
             logging.debug('Build State:' + info['build'])
 
             if info['build'] == '1':return
 
             logging.debug('Trigger Build! identifier:%s, %s' %(identifier, param))
 
-            item = self.GetFreeServer(identifier, server)
+#    item = self.GetFreeServer(identifier, server)
+            item = self.GetFixServer(identifier)
             if item == None:
                 logging.debug("Please Check Your Server,Maybe You Don't Config!!");
                 return
@@ -64,6 +66,25 @@ class jobs:
         logging.debug('ramdom free server %s' %item)
 
 	return item
+
+    def GetFixServer(self, identifier):
+
+        mapping = [{'iden':'40C2', 'job':'40C2_PPOS_10-159'},
+                    {'iden':'32C2', 'job':'32C2_PPOS_10-231'},
+                    {'iden':'43P1S', 'job':'43P1S_PPOS_10-231'},
+                    {'iden':'50C2S', 'job':'50C2S_PPOS_10-159'},
+                    {'iden':'65C2', 'job':'65C2_PPOS_10-157'}]
+
+        server_list = []
+        item = None
+        for i in mapping:
+            if identifier.lower().__eq__(i['iden'].lower()):
+                server_list.append(i['job'])
+
+	if len(server_list) > 0:
+            item = random.choice(server_list)
+        return item
+
 
     def Test(self):
         server = jenkins.Jenkins('http://127.0.0.1:8081', username='leixu', password='1234Qwer')
