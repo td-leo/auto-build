@@ -9,6 +9,7 @@ import utils.contast
 import logging
 import os
 import time
+import contast
 
 
 class sql:
@@ -22,7 +23,8 @@ class sql:
     def _connect(self):
 
         global  db
-        db = MySQLdb.connect("localhost", "root", "scm", "redmine_default",charset='utf8')
+        db = MySQLdb.connect("localhost", contast.REDMINE_SQL_USER, 
+                contast.REDMINE_SQL_PASSWORD, contast.REDMINE_DATABASE_NAME, charset='utf8')
 
     def _query(self, sql):
 
@@ -126,15 +128,8 @@ class sql:
             if int(data[0]) == unresolve_id:
                 return None
 
-        releasenote_path = self.CreateReleaseNoteDir(romid)
-        note = open(releasenote_path, 'a+')
-        for data in datas:
-            logging.debug('releasenote %s' %data[1])
-            note.write(data[1])
 
-        note.close()
-
-        return (project_id, release_path)
+        return (project_id)
 
     def GetAllCompleteProjects(self):
 
@@ -178,7 +173,7 @@ class sql:
         if project_list == None:
 	    logging.INFO('[GetBuildInfo] no project ready to build now !!')
 	    return
-        for project_id, version_id, release_path in project_list:
+        for project_id, version_id in project_list:
 
             version_data = self.GetCustomValueByVersionID(version_id)
             project_data = self.GetCustomValueByProjectID(project_id)
@@ -186,23 +181,18 @@ class sql:
             param = {}
             for value in version_data:
                 if value[0] == self.GetTypeIdFromCustomFields():
-                    param['type'] = value[1]
+                    param['buildtype'] = value[1]
                 elif value[0] == self.GetBuildIdFromCustomFields():
                     param['build'] = value[1]
                 elif value[0] == self.GetRomIdFromCustomFields():
                     param['romid'] = value[1]
 
-            for i in project_data:
-                if i[0] == self.GetChannelIdFromCustomFields():
-                    param['channel'] = value[1]
-
             param['identifier'] = self.GetInfoByProjectID(project_id)[1]
 
             param['versionid'] = version_id
             param['projectid'] = project_id
-            param['name'] = self.GetInfoByVersionID(version_id)
+            param['versionname'] = self.GetNameByVersionID(version_id)
 
-            param['releasenote'] = release_path
             info_list.append(param)
 
 	logging.debug('[GetBuildInfo] project ready to build now:%s' %info_list)
@@ -217,7 +207,7 @@ class sql:
         cursor.close()
         return datas[0][0], datas[0][1]
 
-    def GetInfoByVersionID(self, version_id):
+    def GetNameByVersionID(self, version_id):
         global db
         cursor = db.cursor()
         cursor.execute('select name from versions where id = %s' %(version_id) )
@@ -294,13 +284,6 @@ class sql:
         cursor.close()
         return datas[0][0]
 
-    def GetChannelIdFromCustomFields(self):
-        global db
-        cursor = db.cursor()
-        cursor.execute("select id from custom_fields where name='channel' and type='ProjectCustomField'")
-        datas = cursor.fetchall()
-        cursor.close()
-        return datas[0][0]
 
     def UpdateBuildField(self, version_id):
 

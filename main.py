@@ -5,7 +5,7 @@ from sql.sql import sql
 from jenkin.jobs import jobs
 from log.log import InitLog
 
-def GetBuildInfo():
+def doBuild():
     sqlite = sql()
     job = jobs()
 
@@ -13,4 +13,4 @@ def GetBuildInfo():
 
 if __name__ == '__main__':
     InitLog()
-    GetBuildInfo()
+    doBuild()

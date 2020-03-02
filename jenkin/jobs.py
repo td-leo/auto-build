@@ -3,23 +3,22 @@ __author__ = 'xulei'
 import jenkins
 import random
 import logging
+import contast
 class jobs:
     def Build(self, sqlite):
 
         info_list = sqlite.GetBuildInfo()
         if info_list == None or len(info_list) <= 0:
             return
-        server = jenkins.Jenkins('http://127.0.0.1:8081', username='pposscm', password='Qwer1234')
+        server = jenkins.Jenkins(contast.JENKINS_URL, 
+                username=contast.JENKINS_USERNAME, password=contast.JENKINS_PASSWORD)
 	print server
         print server.jobs_count()
         for info in info_list:
-            param = {'name':None, 'type': None, 'channel':None, 'romid':None, 'releasenote':None}
-            param['type'] = info['type']
-            param['channel'] = info['channel']
+            param = {'versionname':None, 'buildtype': None,  'versionid':None }
+            param['buildtype'] = info['buildtype']
             identifier = info['identifier']
-            param['name'] = info['name']
-            param['romid'] = info['romid']
-            param['releasenote'] = info['releasenote']
+            param['versionname'] = info['versionname']
             logging.debug('Build State:' + info['build'])
 
             if info['build'] == '1':return
@@ -69,11 +68,8 @@ class jobs:
 
     def GetFixServer(self, identifier):
 
-        mapping = [{'iden':'40C2', 'job':'40C2_PPOS_10-159'},
-                    {'iden':'32C2', 'job':'32C2_PPOS_10-231'},
-                    {'iden':'43P1S', 'job':'43P1S_PPOS_10-231'},
-                    {'iden':'50C2S', 'job':'50C2S_PPOS_10-159'},
-                    {'iden':'65C2', 'job':'65C2_PPOS_10-157'}]
+        mapping = [
+                    {'iden':'IOT001', 'job':'IOT-157'}]
 
         server_list = []
         item = None
@@ -87,7 +83,7 @@ class jobs:
 
 
     def Test(self):
-        server = jenkins.Jenkins('http://127.0.0.1:8081', username='leixu', password='1234Qwer')
+        server = jenkins.Jenkins('http://127.0.0.1:8081', username='tdleo', password='1234Qwer')
         print server.get_nodes()
 	info = server.get_node_info('33-150')
 	print info['idle']
